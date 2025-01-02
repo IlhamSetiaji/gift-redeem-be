@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "gift-redeem-be"
+  },
+  "web": {
+    "prefork": false,
+    "port": 3000,
+     "cookie": {
+      "name": "gift-redeem-be",
+      "secure": false,
+      "http_only": true,
+      "max_age": 86400,
+      "same_site": "Lax",
+      "secret": "isi_bebas"
+    },
+    "session": {
+      "name": "isi_bebas"
+    }
+  },
+  "log": {
+    "level": 6,
+    "output": "stdout"
+  },
+  "database": {
+    "driver": "mysql",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "username": "root",
+    "password": "password",
+    "name": "your-db",
+    "pool": {
+      "idle": 10,
+      "max": 100,
+      "lifetime": 300
+    }
+  },
+  "rabbitmq": {
+    "url": "amqp://guest:guest@localhost:5672/",
+    "queue": "golang_lms"
+  },
+  "jwt": {
+    "secret": "isi_bebas"
+  },
+  "mail": {
+    "host": "smtp.hostinger.com",
+    "port": 465,
+    "username": "support@presensi-amc.lanterntechno.com",
+    "password": "$DemonLord1979",
+    "from": "support@presensi-amc.lanterntechno.com"
+  }
+}
