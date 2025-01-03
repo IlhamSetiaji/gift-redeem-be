@@ -68,5 +68,18 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", user)
+	token, err := utils.GenerateToken(user)
+	if err != nil {
+		u.Log.Error("[UserHandler.Login] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	var data = map[string]interface{}{
+		"token":      token,
+		"token_type": "Bearer",
+		"user":       user,
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "success", data)
 }

@@ -33,7 +33,6 @@ type User struct {
 	Status          UserStatus `json:"status" gorm:"default:PENDING"`
 	Roles           []Role     `json:"roles" gorm:"many2many:user_roles;"`
 
-	ChoosedRole   string       `json:"choosed_role" gorm:"-"`
 	RedeemedGifts []Redemption `json:"redeemed_gifts" gorm:"many2many:redemptions;constraint:onDelete:CASCADE;"`
 }
 
