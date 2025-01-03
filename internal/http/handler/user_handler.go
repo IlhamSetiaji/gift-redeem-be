@@ -96,28 +96,28 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 func (u *UserHandler) UserMe(ctx *gin.Context) {
 	user, err := middleware.GetUser(ctx)
 	if err != nil {
-		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		u.Log.Errorf("Error when getting user: %v", err)
 		return
 	}
 	if user == nil {
-		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		utils.ErrorResponse(ctx, http.StatusNotFound, "error", "User not found")
 		u.Log.Errorf("User not found")
 		return
 	}
 
 	me, err := u.UseCase.FindByID(uuid.MustParse(user["id"].(string)))
 	if err != nil {
-		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		u.Log.Errorf("Error when getting user: %v", err)
 		return
 	}
 
 	if me == nil {
-		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		utils.ErrorResponse(ctx, http.StatusNotFound, "error", "User not found")
 		u.Log.Errorf("User not found")
 		return
 	}
 
-	utils.SuccessResponse(ctx, 200, "success", me)
+	utils.SuccessResponse(ctx, http.StatusOK, "success", me)
 }
