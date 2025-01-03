@@ -7,12 +7,14 @@ import (
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/request"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/response"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/repository"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type IUserUseCase interface {
 	Login(payload *request.UserLoginRequest) (*response.UserResponse, error)
+	FindByID(id uuid.UUID) (*response.UserResponse, error)
 }
 
 type UserUseCase struct {
@@ -59,6 +61,21 @@ func (u *UserUseCase) Login(payload *request.UserLoginRequest) (*response.UserRe
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
 		u.Log.Error("Password not match")
 		return nil, errors.New("email or password is incorrect")
+	}
+
+	return u.DTO.ConvertEntityToUserResponse(user), nil
+}
+
+func (u *UserUseCase) FindByID(id uuid.UUID) (*response.UserResponse, error) {
+	user, err := u.Repository.FindById(id)
+	if err != nil {
+		u.Log.Error("[UserUseCase.FindByID] " + err.Error())
+		return nil, err
+	}
+
+	if user == nil {
+		u.Log.Warn("[UserUseCase.FindByID] User not found")
+		return nil, nil
 	}
 
 	return u.DTO.ConvertEntityToUserResponse(user), nil

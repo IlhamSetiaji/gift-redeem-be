@@ -4,17 +4,20 @@ import (
 	"net/http"
 
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/config"
+	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/request"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/usecase"
 	"github.com/IlhamSetiaji/gift-redeem-be/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type IUserHandler interface {
 	Login(ctx *gin.Context)
+	UserMe(ctx *gin.Context)
 }
 
 type UserHandler struct {
@@ -88,4 +91,33 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "success", data)
+}
+
+func (u *UserHandler) UserMe(ctx *gin.Context) {
+	user, err := middleware.GetUser(ctx)
+	if err != nil {
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		u.Log.Errorf("Error when getting user: %v", err)
+		return
+	}
+	if user == nil {
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		u.Log.Errorf("User not found")
+		return
+	}
+
+	me, err := u.UseCase.FindByID(uuid.MustParse(user["id"].(string)))
+	if err != nil {
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		u.Log.Errorf("Error when getting user: %v", err)
+		return
+	}
+
+	if me == nil {
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		u.Log.Errorf("User not found")
+		return
+	}
+
+	utils.SuccessResponse(ctx, 200, "success", me)
 }

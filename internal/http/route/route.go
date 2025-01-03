@@ -32,11 +32,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 		apiRoute.POST("/login", c.UserHandler.Login)
 		apiRoute.Use(c.AuthMiddleware)
 		{
-			apiRoute.GET("/me", func(ctx *gin.Context) {
-				ctx.JSON(200, gin.H{
-					"message": "Welcome brother",
-				})
-			})
+			apiRoute.GET("/users/me", c.UserHandler.UserMe)
 		}
 	}
 }
