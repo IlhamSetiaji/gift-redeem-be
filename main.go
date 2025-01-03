@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/config"
+	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/rabbitmq"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/route"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -18,6 +19,9 @@ import (
 func main() {
 	viper := config.NewViper()
 	log := config.NewLogrus(viper)
+
+	go rabbitmq.InitConsumer(viper, log)
+	go rabbitmq.InitProducer(viper, log)
 
 	app := gin.Default()
 	app.Static("/storage", "./storage")
