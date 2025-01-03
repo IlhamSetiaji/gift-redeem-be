@@ -3,12 +3,14 @@ package handler
 import (
 	"net/http"
 
+	"github.com/IlhamSetiaji/gift-redeem-be/internal/config"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/request"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/usecase"
 	"github.com/IlhamSetiaji/gift-redeem-be/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type IUserHandler interface {
@@ -17,17 +19,20 @@ type IUserHandler interface {
 
 type UserHandler struct {
 	Log      *logrus.Logger
+	Viper    *viper.Viper
 	Validate *validator.Validate
 	UseCase  usecase.IUserUseCase
 }
 
 func NewUserHandler(
 	log *logrus.Logger,
+	viper *viper.Viper,
 	validate *validator.Validate,
 	useCase usecase.IUserUseCase,
 ) IUserHandler {
 	return &UserHandler{
 		Log:      log,
+		Viper:    viper,
 		Validate: validate,
 		UseCase:  useCase,
 	}
@@ -35,10 +40,11 @@ func NewUserHandler(
 
 func UserHandlerFactory(
 	log *logrus.Logger,
-	validate *validator.Validate,
+	viper *viper.Viper,
 ) IUserHandler {
 	useCase := usecase.UserUseCaseFactory(log)
-	return NewUserHandler(log, validate, useCase)
+	validate := config.NewValidator(viper)
+	return NewUserHandler(log, viper, validate, useCase)
 }
 
 func (u *UserHandler) Login(ctx *gin.Context) {

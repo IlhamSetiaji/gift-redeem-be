@@ -32,14 +32,11 @@ func (c *RouteConfig) SetupAPIRoutes() {
 		apiRoute.POST("/login", c.UserHandler.Login)
 		apiRoute.Use(c.AuthMiddleware)
 		{
-			apiRoute.Use(c.AuthMiddleware)
-			{
-				apiRoute.GET("/me", func(ctx *gin.Context) {
-					ctx.JSON(200, gin.H{
-						"message": "Welcome brother",
-					})
+			apiRoute.GET("/me", func(ctx *gin.Context) {
+				ctx.JSON(200, gin.H{
+					"message": "Welcome brother",
 				})
-			}
+			})
 		}
 	}
 }
@@ -53,7 +50,7 @@ func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *Ro
 		App:            app,
 		Log:            log,
 		Viper:          viper,
-		UserHandler:    handler.UserHandlerFactory(log, nil),
+		UserHandler:    handler.UserHandlerFactory(log, viper),
 		AuthMiddleware: authMiddleware,
 	}
 }

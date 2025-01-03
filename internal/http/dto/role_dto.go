@@ -12,20 +12,17 @@ type IRoleDTO interface {
 }
 
 type RoleDTO struct {
-	Log     *logrus.Logger
-	UserDTO IUserDTO
+	Log *logrus.Logger
 }
 
-func NewRoleDTO(log *logrus.Logger, userDTO IUserDTO) IRoleDTO {
+func NewRoleDTO(log *logrus.Logger) IRoleDTO {
 	return &RoleDTO{
-		Log:     log,
-		UserDTO: userDTO,
+		Log: log,
 	}
 }
 
 func RoleDTOFactory(log *logrus.Logger) IRoleDTO {
-	userDTO := UserDTOFactory(log)
-	return NewRoleDTO(log, userDTO)
+	return NewRoleDTO(log)
 }
 
 func (r *RoleDTO) ConvertEntityToRoleResponse(payload *entity.Role) *response.RoleResponse {
@@ -36,16 +33,6 @@ func (r *RoleDTO) ConvertEntityToRoleResponse(payload *entity.Role) *response.Ro
 		Status:    payload.Status,
 		CreatedAt: payload.CreatedAt,
 		UpdatedAt: payload.UpdatedAt,
-		Users: func() *[]response.UserResponse {
-			var users []response.UserResponse
-			if len(payload.Users) == 0 || payload.Users == nil {
-				return nil
-			}
-			for _, user := range payload.Users {
-				users = append(users, *r.UserDTO.ConvertEntityToUserResponse(&user))
-			}
-			return &users
-		}(),
 	}
 }
 
