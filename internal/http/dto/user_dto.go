@@ -12,17 +12,20 @@ type IUserDTO interface {
 }
 
 type UserDTO struct {
-	Log *logrus.Logger
+	Log     *logrus.Logger
+	RoleDTO IRoleDTO
 }
 
-func NewUserDTO(log *logrus.Logger) IUserDTO {
+func NewUserDTO(log *logrus.Logger, roleDTO IRoleDTO) IUserDTO {
 	return &UserDTO{
 		Log: log,
+		RoleDTO: roleDTO,
 	}
 }
 
 func UserDTOFactory(log *logrus.Logger) IUserDTO {
-	return NewUserDTO(log)
+	roleDTO := RoleDTOFactory(log)
+	return NewUserDTO(log, roleDTO)
 }
 
 func (u *UserDTO) ConvertEntityToUserResponse(payload *entity.User) *response.UserResponse {
@@ -34,23 +37,25 @@ func (u *UserDTO) ConvertEntityToUserResponse(payload *entity.User) *response.Us
 		EmailVerifiedAt: payload.EmailVerifiedAt,
 		Gender:          payload.Gender,
 		Status:          payload.Status,
-		Roles:           nil,
+		CreatedAt:       payload.CreatedAt,
+		UpdatedAt:       payload.UpdatedAt,
+		Roles: func() *[]response.RoleResponse {
+			var roles []response.RoleResponse
+			if len(payload.Roles) == 0 || payload.Roles == nil {
+				return nil
+			}
+			for _, role := range payload.Roles {
+				roles = append(roles, *u.RoleDTO.ConvertEntityToRoleResponse(&role))
+			}
+			return &roles
+		}(),
 	}
 }
 
 func (u *UserDTO) ConvertEntitiesToUserResponses(payload *[]entity.User) *[]response.UserResponse {
 	var users []response.UserResponse
 	for _, user := range *payload {
-		users = append(users, response.UserResponse{
-			ID:              user.ID,
-			Email:           user.Email,
-			Name:            user.Name,
-			Username:        user.Username,
-			EmailVerifiedAt: user.EmailVerifiedAt,
-			Gender:          user.Gender,
-			Status:          user.Status,
-			Roles:           nil,
-		})
+		users = append(users, *u.ConvertEntityToUserResponse(&user))
 	}
 	return &users
 }

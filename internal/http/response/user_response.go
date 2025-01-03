@@ -15,5 +15,7 @@ type UserResponse struct {
 	EmailVerifiedAt time.Time         `json:"email_verified_at"`
 	Gender          entity.UserGender `json:"gender"`
 	Status          entity.UserStatus `json:"status"`
+	CreatedAt       time.Time         `json:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at"`
 	Roles           *[]RoleResponse   `json:"roles"`
 }
