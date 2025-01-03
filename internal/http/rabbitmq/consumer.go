@@ -32,12 +32,12 @@ func InitConsumer(viper *viper.Viper, log *logrus.Logger) {
 
 	// create queue
 	queue, err := amqpChannel.QueueDeclare(
-		"gift_redeem_be", // channelname
-		true,             // durable
-		false,            // delete when unused
-		false,            // exclusive
-		false,            // no-wait
-		nil,              // arguments
+		viper.GetString("rabbitmq.queue"), // channelname
+		true,                              // durable
+		false,                             // delete when unused
+		false,                             // exclusive
+		false,                             // no-wait
+		nil,                               // arguments
 	)
 	if err != nil {
 		log.Printf("ERROR: fail create queue: %s", err.Error())
