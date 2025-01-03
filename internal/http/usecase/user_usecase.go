@@ -51,6 +51,11 @@ func (u *UserUseCase) Login(payload *request.UserLoginRequest) (*response.UserRe
 		return nil, nil
 	}
 
+	if user.EmailVerifiedAt.IsZero() {
+		u.Log.Warn("[UserUseCase.Login] User email not verified")
+		return nil, errors.New("email not verified")
+	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
 		u.Log.Error("Password not match")
 		return nil, errors.New("email or password is incorrect")
