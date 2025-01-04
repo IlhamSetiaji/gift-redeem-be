@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/request"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/response"
 	"github.com/IlhamSetiaji/gift-redeem-be/utils"
@@ -101,7 +102,91 @@ func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger) {
 	var msgData map[string]interface{}
 
 	switch docMsg.MessageType {
+	case "send_mail":
+		// jobID, ok := docMsg.MessageData["job_id"].(string)
+		// if !ok {
+		// 	log.Printf("Invalid request format: missing 'job_id'")
+		// 	msgData = map[string]interface{}{
+		// 		"error": errors.New("missing 'job_id'").Error(),
+		// 	}
+		// 	break
+		// }
 
+		// messageFactory := messaging.JobPlafonMessageFactory(log)
+		// message, err := messageFactory.FindJobPlafonByJobIDMessage(uuid.MustParse(jobID))
+
+		// if err != nil {
+		// 	log.Printf("Failed to execute message: %v", err)
+		// 	msgData = map[string]interface{}{
+		// 		"error": err.Error(),
+		// 	}
+		// 	break
+		// }
+
+		// msgData = map[string]interface{}{
+		// 	"id":     message.ID,
+		// 	"plafon": message.Plafon,
+		// }
+		to, ok := docMsg.MessageData["to"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'to'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'to'").Error(),
+			}
+			break
+		}
+		subject, ok := docMsg.MessageData["subject"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'subject'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'subject'").Error(),
+			}
+			break
+		}
+		body, ok := docMsg.MessageData["body"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'body'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'body'").Error(),
+			}
+			break
+		}
+		from, ok := docMsg.MessageData["from"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'from'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'from'").Error(),
+			}
+			break
+		}
+		email, ok := docMsg.MessageData["email"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'email'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'email'").Error(),
+			}
+			break
+		}
+
+		messageFactory := messaging.MailMessageFactory(log)
+		_, err := messageFactory.SendMail(&request.MailRequest{
+			Email:   email,
+			From:    from,
+			To:      to,
+			Subject: subject,
+			Body:    body,
+		})
+		if err != nil {
+			log.Printf("Failed to execute message: %v", err)
+			msgData = map[string]interface{}{
+				"error": err.Error(),
+			}
+			break
+		}
+
+		msgData = map[string]interface{}{
+			"message": "success",
+		}
 	default:
 		log.Printf("Unknown message type, please recheck your type: %s", docMsg.MessageType)
 
