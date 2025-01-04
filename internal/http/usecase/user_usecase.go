@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 
+	"github.com/IlhamSetiaji/gift-redeem-be/internal/entity"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/dto"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/request"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/response"
@@ -14,6 +15,7 @@ import (
 
 type IUserUseCase interface {
 	Login(payload *request.UserLoginRequest) (*response.UserResponse, error)
+	Register(payload *request.UserRegisterRequest) (*response.UserResponse, error)
 	FindByID(id uuid.UUID) (*response.UserResponse, error)
 }
 
@@ -76,6 +78,41 @@ func (u *UserUseCase) FindByID(id uuid.UUID) (*response.UserResponse, error) {
 	if user == nil {
 		u.Log.Warn("[UserUseCase.FindByID] User not found")
 		return nil, nil
+	}
+
+	return u.DTO.ConvertEntityToUserResponse(user), nil
+}
+
+func (u *UserUseCase) Register(payload *request.UserRegisterRequest) (*response.UserResponse, error) {
+	user, err := u.Repository.FindByEmail(payload.Email)
+	if err != nil {
+		u.Log.Error("[UserUseCase.Register] " + err.Error())
+		return nil, err
+	}
+
+	if user != nil {
+		u.Log.Warn("[UserUseCase.Register] User already registered")
+		return nil, errors.New("user already registered")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		u.Log.Error("[UserUseCase.Register] " + err.Error())
+		return nil, err
+	}
+
+	user = &entity.User{
+		Username: payload.Username,
+		Email:    payload.Email,
+		Name:     payload.Name,
+		Password: string(hashedPassword),
+		Gender:   payload.Gender,
+		Status:   entity.USER_PENDING,
+	}
+
+	if _, err := u.Repository.CreateUser(user, payload.RoleIDs); err != nil {
+		u.Log.Error("[UserUseCase.Register] " + err.Error())
+		return nil, err
 	}
 
 	return u.DTO.ConvertEntityToUserResponse(user), nil
