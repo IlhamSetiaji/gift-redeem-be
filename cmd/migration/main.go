@@ -14,7 +14,7 @@ func main() {
 	db := config.NewDatabase()
 
 	// migrate the schema
-	err := db.AutoMigrate(&entity.Role{}, &entity.User{}, &entity.UserRole{}, &entity.Gift{}, &entity.Redemption{}, &entity.Rating{})
+	err := db.AutoMigrate(&entity.Role{}, &entity.User{}, &entity.UserToken{}, &entity.UserRole{}, &entity.Gift{}, &entity.Redemption{}, &entity.Rating{})
 	if err != nil {
 		log.Fatal(err)
 	} else {
