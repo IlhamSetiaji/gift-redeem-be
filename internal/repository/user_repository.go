@@ -17,6 +17,7 @@ type IUserRepository interface {
 	CreateUser(user *entity.User, roleIDs []uuid.UUID) (*entity.User, error)
 	UpdateUser(user *entity.User, roleIDs []uuid.UUID) (*entity.User, error)
 	DeleteUser(id uuid.UUID) error
+	CreateUserToken(email string, token int) error
 }
 
 type UserRepository struct {
@@ -213,6 +214,39 @@ func (r *UserRepository) DeleteUser(id uuid.UUID) error {
 		tx.Rollback()
 		r.Log.Error("[UserRepository.DeleteUser] failed to commit transaction: " + err.Error())
 		return errors.New("[UserRepository.DeleteUser] failed to commit transaction: " + err.Error())
+	}
+
+	return nil
+}
+
+func (r *UserRepository) CreateUserToken(email string, token int) error {
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		return errors.New("[UserRepository.CreateUserToken] failed to begin transaction: " + tx.Error.Error())
+	}
+
+	var user entity.User
+	if err := tx.First(&user, "email = ?", email).Error; err != nil {
+		tx.Rollback()
+		r.Log.Error("[UserRepository.CreateUserToken] User not found: " + err.Error())
+		return errors.New("[UserRepository.CreateUserToken] User not found: " + err.Error())
+	}
+
+	var userToken = entity.UserToken{
+		Email: email,
+		Token: token,
+	}
+
+	if err := tx.Create(&userToken).Error; err != nil {
+		tx.Rollback()
+		r.Log.Error("[UserRepository.CreateUserToken] " + err.Error())
+		return errors.New("[UserRepository.CreateUserToken] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Error("[UserRepository.CreateUserToken] failed to commit transaction: " + err.Error())
+		return errors.New("[UserRepository.CreateUserToken] failed to commit transaction: " + err.Error())
 	}
 
 	return nil

@@ -5,12 +5,14 @@ import (
 
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/entity"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/dto"
+	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/request"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/http/response"
 	"github.com/IlhamSetiaji/gift-redeem-be/internal/repository"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/exp/rand"
 )
 
 type IUserUseCase interface {
@@ -20,27 +22,31 @@ type IUserUseCase interface {
 }
 
 type UserUseCase struct {
-	Log        *logrus.Logger
-	Repository repository.IUserRepository
-	DTO        dto.IUserDTO
+	Log         *logrus.Logger
+	Repository  repository.IUserRepository
+	DTO         dto.IUserDTO
+	MailMessage messaging.IMailMessage
 }
 
 func NewUserUseCase(
 	log *logrus.Logger,
 	repository repository.IUserRepository,
 	dto dto.IUserDTO,
+	mailMessage messaging.IMailMessage,
 ) IUserUseCase {
 	return &UserUseCase{
-		Log:        log,
-		Repository: repository,
-		DTO:        dto,
+		Log:         log,
+		Repository:  repository,
+		DTO:         dto,
+		MailMessage: mailMessage,
 	}
 }
 
 func UserUseCaseFactory(log *logrus.Logger) IUserUseCase {
 	repository := repository.UserRepositoryFactory(log)
 	dto := dto.UserDTOFactory(log)
-	return NewUserUseCase(log, repository, dto)
+	mailMessage := messaging.MailMessageFactory(log)
+	return NewUserUseCase(log, repository, dto, mailMessage)
 }
 
 func (u *UserUseCase) Login(payload *request.UserLoginRequest) (*response.UserResponse, error) {
@@ -111,6 +117,23 @@ func (u *UserUseCase) Register(payload *request.UserRegisterRequest) (*response.
 	}
 
 	if _, err := u.Repository.CreateUser(user, payload.RoleIDs); err != nil {
+		u.Log.Error("[UserUseCase.Register] " + err.Error())
+		return nil, err
+	}
+
+	randomIntToken := rand.Intn(100000)
+	if err := u.Repository.CreateUserToken(payload.Email, randomIntToken); err != nil {
+		u.Log.Error("[UserUseCase.Register] " + err.Error())
+		return nil, err
+	}
+
+	if _, err := u.MailMessage.SendMail(&request.MailRequest{
+		Email:   payload.Email,
+		Subject: "Email Verification",
+		Body:    "Your verification code is " + string(randomIntToken),
+		From:    "ilham.ahmadz18@gmail.com",
+		To:      payload.Email,
+	}); err != nil {
 		u.Log.Error("[UserUseCase.Register] " + err.Error())
 		return nil, err
 	}
